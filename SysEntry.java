@@ -1,5 +1,3 @@
-public interface SysEntry  {
+public interface SysEntry {
 
-    
-    
 }
