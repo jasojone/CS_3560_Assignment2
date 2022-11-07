@@ -7,22 +7,24 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
-import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreePath;
 
 public class AdminPanel implements ActionListener, TreeSelectionListener {
 
     private static AdminPanel adminInstance = null;
     JFrame frame = null;
     JTree tree = null;
+    JScrollPane treeScroll;
     JTextArea addUserTextArea;
     JTextArea addGroupTextArea;
+    JTextArea alertTextArea;
     HashMap<String, User> userMap = new HashMap<String, User>();
 
     private AdminPanel() {
@@ -57,6 +59,9 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         this.tree.setBounds(25, 25, 350, 500);
         this.tree.setBorder(BorderFactory.createLineBorder(Color.black));
         this.tree.addTreeSelectionListener(this);
+        this.treeScroll = new JScrollPane(this.tree);
+        this.treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        this.treeScroll.setBounds(25, 25, 350, 500);
 
         // textArea for add User
         JLabel addUserLabel = new JLabel("New User Name");
@@ -109,7 +114,7 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         showPositivePercButton.setBounds(595, 475, 180, 50);
         showPositivePercButton.addActionListener(this);
 
-        frame.add(tree);
+        frame.add(this.treeScroll);
         frame.add(treeLabel);
         frame.add(addUserLabel);
         frame.add(addUserTextArea);
@@ -139,11 +144,19 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
     }
 
     private void addUserClicked() {
+        // check if user already exists
+        String newUserName = addUserTextArea.getText();
+
+        if (this.userMap.containsKey(newUserName)) {
+            return;
+        }
+        this.userMap.put(newUserName, new User(newUserName));
+
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-        DefaultMutableTreeNode newUserNode = new DefaultMutableTreeNode(addUserTextArea.getText());
+        DefaultMutableTreeNode newUserNode = new DefaultMutableTreeNode(newUserName);
         DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
         if (selectedNode == null) {
-            DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
             root.add(newUserNode);
             treeModel.reload(root);
             System.out.print("New User Node Added");
@@ -152,6 +165,7 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
 
         selectedNode.add(newUserNode);
         treeModel.reload(selectedNode);
+        this.addUserTextArea.setText("");
 
     }
 
@@ -159,7 +173,6 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
 
         Object selectedNode = tree.getLastSelectedPathComponent();
         DefaultMutableTreeNode newGroupNode = new DefaultMutableTreeNode(addGroupTextArea.getText());
-
         DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
 
@@ -177,10 +190,16 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         System.out.println(currentIndex);
         treeModel.insertNodeInto(newGroupNode, parent, currentIndex + 1);
         treeModel.reload(root);
+        this.addGroupTextArea.setText("");
 
     }
 
     private void openUserViewClicked() {
+
+        Object selectedNode = tree.getLastSelectedPathComponent();
+        String selectedNodeName = selectedNode.toString();
+
+        userMap.get(selectedNodeName).renderGUI();
 
     }
 

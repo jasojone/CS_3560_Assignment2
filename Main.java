@@ -5,9 +5,6 @@ public class Main {
         AdminPanel admin = AdminPanel.getInstance();
 
         admin.renderGUI();
-        admin.addTestValues();
-
-        // User newTestUser = new User("Potato");
 
     }
 
