@@ -1,9 +1,13 @@
+package src;
+
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Font;
 import java.awt.event.*;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -11,28 +15,40 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.UIManager;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreePath;
+
+import Visitor.SysEntryVisitor;
+import Visitor.SysEntryVisitorImpl;
 
 public class AdminPanel implements ActionListener, TreeSelectionListener {
 
     private static AdminPanel adminInstance = null;
-    JFrame frame = null;
-    JTree tree = null;
-    JScrollPane treeScroll;
-    JTextArea addUserTextArea;
-    JTextArea addGroupTextArea;
-    JTextArea alertTextArea;
-    HashMap<String, User> userMap = new HashMap<String, User>();
+
+    // incremented by visitors
+    private int numberOfUsers = 0;
+    private int numberOfGroups = 0;
+
+    private JFrame frame = null;
+    private JTree tree = null;
+    private JScrollPane treeScroll;
+    private JTextArea addUserTextArea;
+    private JTextArea addGroupTextArea;
+    private JTextArea alertTextArea;
+    private HashMap<String, User> userMap = new HashMap<String, User>();
+    private HashMap<String, Group> groupMap = new HashMap<String, Group>();
 
     private AdminPanel() {
     }
 
     public static AdminPanel getInstance() {
 
-        if (adminInstance == null) {
+        if (AdminPanel.adminInstance == null) {
             adminInstance = new AdminPanel();
         }
 
@@ -47,7 +63,8 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         }
 
         this.frame = new JFrame();
-        DefaultMutableTreeNode Root = new DefaultMutableTreeNode("Root");
+        Group rootGroup = new Group("Root");
+        DefaultMutableTreeNode Root = new DefaultMutableTreeNode(new TreeNode(rootGroup));
 
         // general components
         Font font = new Font("Arial", Font.BOLD, 20);
@@ -62,6 +79,31 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         this.treeScroll = new JScrollPane(this.tree);
         this.treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.treeScroll.setBounds(25, 25, 350, 500);
+
+        // custom icons for tree
+        tree.setCellRenderer(new DefaultTreeCellRenderer() {
+
+            private Icon groupIcon = UIManager.getIcon("FileView.directoryIcon");
+            private Icon userIcon = UIManager.getIcon("FileView.fileIcon");
+
+            @Override
+            public Component getTreeCellRendererComponent(JTree tree,
+                    Object value, boolean selected, boolean expanded,
+                    boolean isLeaf, int row, boolean focused) {
+                Component c = super.getTreeCellRendererComponent(tree, value,
+                        selected, expanded, isLeaf, row, focused);
+
+                DefaultMutableTreeNode nodeValue = (DefaultMutableTreeNode) value;
+                TreeNode userObject = (TreeNode) nodeValue.getUserObject();
+
+                if (userObject.isGroup)
+                    setIcon(groupIcon);
+                else
+                    setIcon(userIcon);
+                return c;
+            }
+
+        });
 
         // textArea for add User
         JLabel addUserLabel = new JLabel("New User Name");
@@ -137,72 +179,113 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
 
     }
 
-    private Boolean isAGroupSelected() {
-        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-
-        return true;
-    }
-
     private void addUserClicked() {
         // check if user already exists
         String newUserName = addUserTextArea.getText();
-
         if (this.userMap.containsKey(newUserName)) {
             return;
         }
-        this.userMap.put(newUserName, new User(newUserName));
 
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-        DefaultMutableTreeNode newUserNode = new DefaultMutableTreeNode(newUserName);
+
+        User newUser = new User(newUserName);
+        DefaultMutableTreeNode newUserNode = new DefaultMutableTreeNode(new TreeNode(newUser));
+
         DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
         if (selectedNode == null) {
             root.add(newUserNode);
             treeModel.reload(root);
-            System.out.print("New User Node Added");
+            System.out.println("New User Node Added");
             return;
         }
 
-        selectedNode.add(newUserNode);
-        treeModel.reload(selectedNode);
+        TreeNode selectedTreeNode = (TreeNode) selectedNode.getUserObject();
+        DefaultMutableTreeNode parentOfSelectedNode = (DefaultMutableTreeNode) selectedNode.getParent();
+
+        if (selectedTreeNode.isGroup) {
+            Group selectedGroupTreeNode = (Group) selectedTreeNode.entry;
+            SysEntryVisitor visitor = new SysEntryVisitorImpl();
+            selectedGroupTreeNode.accept(visitor);
+            selectedNode.add(newUserNode);
+        } else {
+            parentOfSelectedNode.add(newUserNode);
+        }
+
+        if (parentOfSelectedNode == null) {
+            treeModel.reload(root);
+        } else {
+            treeModel.reload(parentOfSelectedNode);
+        }
+
+        TreePath path = tree.getSelectionPath();
+        tree.expandPath(path);
+        this.userMap.put(newUserName, newUser);
         this.addUserTextArea.setText("");
 
     }
 
     private void addGroupClicked() {
 
-        Object selectedNode = tree.getLastSelectedPathComponent();
-        DefaultMutableTreeNode newGroupNode = new DefaultMutableTreeNode(addGroupTextArea.getText());
-        DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
-
-        if (selectedNode == null) {
-            root.add(newGroupNode);
-            treeModel.reload(root);
-            System.out.print("New User Node Added");
+        // check if group already exists
+        String newGroupName = addGroupTextArea.getText();
+        if (this.groupMap.containsKey(newGroupName)) {
             return;
         }
 
-        // TreePath path = tree.getSelectionPath();
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) selectedNode;
-        DefaultMutableTreeNode parent = (DefaultMutableTreeNode) node.getParent();
-        int currentIndex = parent.getIndex(node);
-        System.out.println(currentIndex);
-        treeModel.insertNodeInto(newGroupNode, parent, currentIndex + 1);
-        treeModel.reload(root);
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+
+        Group newGroup = new Group(newGroupName);
+        DefaultMutableTreeNode newGroupNode = new DefaultMutableTreeNode(new TreeNode(newGroup));
+
+        DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) treeModel.getRoot();
+        if (selectedNode == null) {
+            root.add(newGroupNode);
+            treeModel.reload(root);
+            System.out.println("New Group Node Added");
+            return;
+        }
+
+        TreeNode selectedTreeNode = (TreeNode) selectedNode.getUserObject();
+        DefaultMutableTreeNode parentOfSelectedNode = (DefaultMutableTreeNode) selectedNode.getParent();
+
+        if (selectedTreeNode.isGroup) {
+            selectedNode.add(newGroupNode);
+        } else {
+
+            // TreePath path = tree.getSelectionPath();
+            int currentIndex = parentOfSelectedNode.getIndex(selectedNode);
+            treeModel.insertNodeInto(newGroupNode, parentOfSelectedNode, currentIndex + 1);
+
+        }
+
+        if (parentOfSelectedNode == null) {
+            treeModel.reload(root);
+        } else {
+            treeModel.reload(parentOfSelectedNode);
+        }
+
+        TreePath path = tree.getSelectionPath();
+        tree.expandPath(path);
+
+        this.groupMap.put(newGroupName, newGroup);
         this.addGroupTextArea.setText("");
 
     }
 
     private void openUserViewClicked() {
 
-        Object selectedNode = tree.getLastSelectedPathComponent();
-        String selectedNodeName = selectedNode.toString();
+        DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        TreeNode selectedNodeTreeNode = (TreeNode) selectedNode.getUserObject();
 
-        userMap.get(selectedNodeName).renderGUI();
+        SysEntryVisitor visitor = new SysEntryVisitorImpl();
 
+        User selectedUser = (User) selectedNodeTreeNode.entry;
+        selectedUser.accept(visitor);
     }
 
+    // get total number of users
     private void showUserTotalClicked() {
 
     }

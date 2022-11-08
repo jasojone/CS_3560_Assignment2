@@ -1,5 +1,10 @@
+package src;
+
 import java.awt.Color;
 import java.awt.Font;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -9,9 +14,22 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
 
-public class User extends JFrame implements SysEntry {
+import Observer.Observer;
+import Visitor.SysEntryVisitor;
 
-    String username;
+public class User extends JFrame implements SysEntry, Observer {
+
+    private UUID ID;
+    private String userName;
+
+    // tweet list
+    private List<Tweet> tweetList = new ArrayList<Tweet>();
+
+    // observers -> users that are following me
+    private List<User> observers = new ArrayList<User>();
+
+    private List<User> usersIAmFollowing = new ArrayList<User>();
+
     JFrame frame;
     JTextArea followUserTextArea;
     JTextArea curFollowingTextArea;
@@ -22,7 +40,18 @@ public class User extends JFrame implements SysEntry {
     JTextArea alertTextArea;
 
     public User(String username) {
-        this.username = username;
+        this.userName = username;
+        this.ID = UUID.randomUUID();
+    }
+
+    public void followUser(User user) {
+
+        this.usersIAmFollowing.add(user);
+
+    }
+
+    public void addFollower(User user) {
+
     }
 
     public void renderGUI() {
@@ -89,10 +118,46 @@ public class User extends JFrame implements SysEntry {
         add(newsFeedScroll);
 
         setSize(550, 700);
-        setTitle(this.username);
+        setTitle(this.userName);
         setLayout(null);
         setResizable(false);
         setVisible(true);
+    }
+
+    @Override
+    public void update() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public Boolean isGroup() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public String getID() {
+        // TODO Auto-generated method stub
+        return this.ID.toString();
+    }
+
+    @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return this.userName;
+    }
+
+    @Override
+    public String getObservers() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void accept(SysEntryVisitor visitor) {
+        // TODO Auto-generated method stub
+        visitor.visit(this);
     }
 
 }
