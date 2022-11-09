@@ -16,8 +16,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -26,7 +24,7 @@ import javax.swing.tree.TreePath;
 import Visitor.SysEntryVisitor;
 import Visitor.SysEntryVisitorImpl;
 
-public class AdminPanel implements ActionListener, TreeSelectionListener {
+public class AdminPanel implements ActionListener {
 
     private static AdminPanel adminInstance = null;
 
@@ -75,7 +73,6 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         this.tree = new JTree(Root);
         this.tree.setBounds(25, 25, 350, 500);
         this.tree.setBorder(BorderFactory.createLineBorder(Color.black));
-        this.tree.addTreeSelectionListener(this);
         this.treeScroll = new JScrollPane(this.tree);
         this.treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.treeScroll.setBounds(25, 25, 350, 500);
@@ -285,6 +282,14 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
         selectedUser.accept(visitor);
     }
 
+    public User getUser(String username) {
+        if (!this.userMap.containsKey(username)) {
+            return null;
+        }
+
+        return this.userMap.get(username);
+    }
+
     // get total number of users
     private void showUserTotalClicked() {
 
@@ -336,14 +341,6 @@ public class AdminPanel implements ActionListener, TreeSelectionListener {
                 break;
 
         }
-
-    }
-
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        // DefaultMutableTreeNode selectedNode =
-        // (DefaultMutableTreeNode)tree.getLastSelectedPathComponent();
-        // System.out.println(selectedNode);
 
     }
 
