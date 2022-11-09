@@ -5,11 +5,14 @@ import java.awt.Font;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
@@ -17,7 +20,7 @@ import javax.swing.ScrollPaneConstants;
 import Observer.Observer;
 import Visitor.SysEntryVisitor;
 
-public class User extends JFrame implements SysEntry, Observer {
+public class User extends JFrame implements SysEntry, Observer, ActionListener {
 
     private UUID ID;
     private String userName;
@@ -32,10 +35,12 @@ public class User extends JFrame implements SysEntry, Observer {
 
     JFrame frame;
     JTextArea followUserTextArea;
-    JTextArea curFollowingTextArea;
-    JScrollPane curFollowingScroll;
     JTextArea tweetTextArea;
-    JTextArea newsFeedTextArea;
+    JScrollPane curFollowingScroll;
+
+    JList curFollowingList;
+    JList newsFeedList;
+
     JScrollPane newsFeedScroll;
     JTextArea alertTextArea;
 
@@ -71,14 +76,14 @@ public class User extends JFrame implements SysEntry, Observer {
         JButton followUserButton = new JButton("Follow User");
         followUserButton.setBounds(275, 20, 240, 30);
 
-        // textArea list view of current following
+        // list view of current following
         JLabel curFollowingLabel = new JLabel("Current Following");
         curFollowingLabel.setBounds(20, 75, 240, 20);
-        this.curFollowingTextArea = new JTextArea();
-        this.curFollowingTextArea.setBounds(20, 95, 495, 200);
-        this.curFollowingTextArea.setEditable(false);
-        this.curFollowingTextArea.setBorder(BorderFactory.createLineBorder(Color.black));
-        this.curFollowingScroll = new JScrollPane(curFollowingTextArea);
+        this.curFollowingList = new JList<>();
+        this.curFollowingList.setBounds(20, 95, 495, 200);
+        this.curFollowingList.setBorder(BorderFactory.createLineBorder(Color.black));
+
+        this.curFollowingScroll = new JScrollPane(curFollowingList);
         this.curFollowingScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.curFollowingScroll.setBounds(20, 95, 495, 200);
 
@@ -98,11 +103,10 @@ public class User extends JFrame implements SysEntry, Observer {
         // List View to show new feed other user posts
         JLabel newsFeedLabel = new JLabel("News Feed");
         newsFeedLabel.setBounds(20, 415, 100, 20);
-        this.newsFeedTextArea = new JTextArea();
-        this.newsFeedTextArea.setBounds(20, 440, 495, 200);
-        this.newsFeedTextArea.setEditable(false);
-        this.newsFeedTextArea.setBorder(BorderFactory.createLineBorder(Color.black));
-        this.newsFeedScroll = new JScrollPane(newsFeedTextArea);
+        this.newsFeedList = new JList<>();
+        this.newsFeedList.setBounds(20, 440, 495, 200);
+        this.newsFeedList.setBorder(BorderFactory.createLineBorder(Color.black));
+        this.newsFeedScroll = new JScrollPane(newsFeedList);
         this.newsFeedScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.newsFeedScroll.setBounds(20, 440, 495, 200);
 
@@ -158,6 +162,34 @@ public class User extends JFrame implements SysEntry, Observer {
     public void accept(SysEntryVisitor visitor) {
         // TODO Auto-generated method stub
         visitor.visit(this);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        // TODO Auto-generated method stub
+
+        String action = e.toString();
+
+        switch (action) {
+            case "Follow User":
+                followUserClicked();
+                break;
+            case "Post Tweet":
+                postTweetClicked();
+                break;
+            default:
+                System.out.println("Error in User class events!");
+
+        }
+
+    }
+
+    private void postTweetClicked() {
+
+    }
+
+    private void followUserClicked() {
+
     }
 
 }
