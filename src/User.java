@@ -1,5 +1,7 @@
 package src;
 
+import java.awt.event.*;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
@@ -17,13 +19,16 @@ import javax.swing.ScrollPaneConstants;
 import Observer.Observer;
 import Visitor.SysEntryVisitor;
 
-public class User extends JFrame implements SysEntry, Observer {
+public class User extends JFrame implements ActionListener, SysEntry, Observer {
 
     private UUID ID;
     private String userName;
 
-    // tweet list
-    private List<Tweet> tweetList = new ArrayList<Tweet>();
+    // overall tweets
+    private List<Tweet> allTweets = new ArrayList<Tweet>();
+
+    // this users tweet list
+    private List<Tweet> myTweets = new ArrayList<Tweet>();
 
     // observers -> users that are following me
     private List<User> observers = new ArrayList<User>();
@@ -124,6 +129,12 @@ public class User extends JFrame implements SysEntry, Observer {
         setVisible(true);
     }
 
+    public void addObserver(User user) {
+
+        this.observers.add(user);
+
+    }
+
     @Override
     public void update() {
         // TODO Auto-generated method stub
@@ -158,6 +169,41 @@ public class User extends JFrame implements SysEntry, Observer {
     public void accept(SysEntryVisitor visitor) {
         // TODO Auto-generated method stub
         visitor.visit(this);
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+
+        String action = e.getActionCommand();
+
+        switch (action) {
+            case "Follow User":
+                followUserClicked();
+                break;
+            case "Post tweet":
+                postTweetClicked();
+                break;
+            default:
+                System.out.println("Something went wrong!");
+
+        }
+
+    }
+
+    private void followUserClicked() {
+        String userToFollow = this.followUserTextArea.getText();
+
+        AdminPanel tempAdmin = AdminPanel.getInstance();
+        User user = tempAdmin.getUser(userToFollow);
+        if (user == null) {
+            return;
+        }
+
+        user.addObserver(this);
+
+    }
+
+    private void postTweetClicked() {
     }
 
 }
