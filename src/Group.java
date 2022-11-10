@@ -40,14 +40,11 @@ public class Group implements SysEntry {
     }
 
     @Override
-    public String getObservers() {
+    public int accept(SysEntryVisitor visitor) {
         // TODO Auto-generated method stub
-        return null;
+
+        return 0;
+
     }
 
-    @Override
-    public void accept(SysEntryVisitor visitor) {
-        // TODO Auto-generated method stub
-        visitor.visit(this);
-    }
 }

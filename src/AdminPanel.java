@@ -11,6 +11,7 @@ import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
@@ -21,16 +22,17 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import Visitor.PositiveCountVisitorImpl;
 import Visitor.SysEntryVisitor;
-import Visitor.SysEntryVisitorImpl;
+import Visitor.TweetCountVisitorImpl;
+import Visitor.UserCountVisitorImpl;
+import Visitor.UserRenderVisitorImpl;
 
 public class AdminPanel implements ActionListener {
 
     private static AdminPanel adminInstance = null;
 
-    // incremented by visitors
-    private int numberOfUsers = 0;
-    private int numberOfGroups = 0;
+    private int numberOfGroups = 1;
 
     private JFrame frame = null;
     private JTree tree = null;
@@ -38,15 +40,15 @@ public class AdminPanel implements ActionListener {
     private JTextArea addUserTextArea;
     private JTextArea addGroupTextArea;
     private JTextArea alertTextArea;
-    private HashMap<String, User> userMap = new HashMap<String, User>();
-    private HashMap<String, Group> groupMap = new HashMap<String, Group>();
+    private HashMap<String, User> userMap;
+    private HashMap<String, Group> groupMap;
 
     private AdminPanel() {
     }
 
     public static AdminPanel getInstance() {
 
-        if (AdminPanel.adminInstance == null) {
+        if (adminInstance == null) {
             adminInstance = new AdminPanel();
         }
 
@@ -59,6 +61,9 @@ public class AdminPanel implements ActionListener {
         if (this.frame != null || this.tree != null) {
             return;
         }
+
+        this.userMap = new HashMap<>();
+        this.groupMap = new HashMap<>();
 
         this.frame = new JFrame();
         Group rootGroup = new Group("Root");
@@ -193,6 +198,8 @@ public class AdminPanel implements ActionListener {
         if (selectedNode == null) {
             root.add(newUserNode);
             treeModel.reload(root);
+            this.userMap.put(newUserName, newUser);
+            this.addUserTextArea.setText(null);
             System.out.println("New User Node Added");
             return;
         }
@@ -202,7 +209,7 @@ public class AdminPanel implements ActionListener {
 
         if (selectedTreeNode.isGroup) {
             Group selectedGroupTreeNode = (Group) selectedTreeNode.entry;
-            SysEntryVisitor visitor = new SysEntryVisitorImpl();
+            SysEntryVisitor visitor = new UserRenderVisitorImpl();
             selectedGroupTreeNode.accept(visitor);
             selectedNode.add(newUserNode);
         } else {
@@ -218,7 +225,12 @@ public class AdminPanel implements ActionListener {
         TreePath path = tree.getSelectionPath();
         tree.expandPath(path);
         this.userMap.put(newUserName, newUser);
-        this.addUserTextArea.setText("");
+        this.addUserTextArea.setText(null);
+
+        System.out.println("USER MAP");
+        for (User element : this.userMap.values()) {
+            System.out.println(element.getName());
+        }
 
     }
 
@@ -240,6 +252,8 @@ public class AdminPanel implements ActionListener {
         if (selectedNode == null) {
             root.add(newGroupNode);
             treeModel.reload(root);
+            this.groupMap.put(newGroupName, newGroup);
+            this.addGroupTextArea.setText(null);
             System.out.println("New Group Node Added");
             return;
         }
@@ -267,7 +281,7 @@ public class AdminPanel implements ActionListener {
         tree.expandPath(path);
 
         this.groupMap.put(newGroupName, newGroup);
-        this.addGroupTextArea.setText("");
+        this.addGroupTextArea.setText(null);
 
     }
 
@@ -276,13 +290,17 @@ public class AdminPanel implements ActionListener {
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
         TreeNode selectedNodeTreeNode = (TreeNode) selectedNode.getUserObject();
 
-        SysEntryVisitor visitor = new SysEntryVisitorImpl();
+        SysEntryVisitor visitor = new UserRenderVisitorImpl();
 
         User selectedUser = (User) selectedNodeTreeNode.entry;
         selectedUser.accept(visitor);
     }
 
     public User getUser(String username) {
+        for (User element : userMap.values()) {
+            System.out.println(element);
+        }
+
         if (!this.userMap.containsKey(username)) {
             return null;
         }
@@ -290,20 +308,60 @@ public class AdminPanel implements ActionListener {
         return this.userMap.get(username);
     }
 
+    public int getNumOfGroups() {
+        return this.numberOfGroups;
+    }
+
     // get total number of users
     private void showUserTotalClicked() {
+        int numberOfUsers = 0;
+        SysEntryVisitor userCountVisitor = new UserCountVisitorImpl();
+        for (User user : this.userMap.values()) {
+            numberOfUsers += user.accept(userCountVisitor);
+        }
+
+        JOptionPane.showMessageDialog(frame, "Total number of users: " + numberOfUsers);
 
     }
 
     private void showGroupTotalClicked() {
 
+        JOptionPane.showMessageDialog(frame, numberOfGroups);
+
     }
 
     private void showMessagesTotalClicked() {
 
+        int numberOfMessages = 0;
+        SysEntryVisitor tweetCountVisitor = new TweetCountVisitorImpl();
+        for (User user : this.userMap.values()) {
+            numberOfMessages += user.accept(tweetCountVisitor);
+        }
+
+        JOptionPane.showMessageDialog(frame, "Total number of messages: " + numberOfMessages);
+
     }
 
     private void showPositivePercClicked() {
+        int numberOfPositive = 0;
+        int numberOfMessages = 0;
+        SysEntryVisitor numberOfPosVisitor = new PositiveCountVisitorImpl();
+        SysEntryVisitor numberOfMesVisitor = new TweetCountVisitorImpl();
+        for (User user : this.userMap.values()) {
+            numberOfPositive += user.accept(numberOfPosVisitor);
+            numberOfMessages += user.accept(numberOfMesVisitor);
+        }
+
+        System.out.println(numberOfPositive);
+        System.out.println(numberOfMessages);
+
+        if (numberOfMessages == 0) {
+            return;
+        }
+
+        Double positivePerc = (numberOfPositive * 1.0 / numberOfMessages) * 100.0;
+
+        JOptionPane.showMessageDialog(frame, "Percentage of positive: " + positivePerc + "%");
 
     }
 

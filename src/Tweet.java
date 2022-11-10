@@ -2,7 +2,7 @@ package src;
 
 public class Tweet {
 
-    private static int timeValue = 1;
+    private static int timeValue = 0;
     private String tweetStr;
     private int timeStamp;
 
@@ -18,6 +18,11 @@ public class Tweet {
 
     public int getTimeValue() {
         return this.timeStamp;
+    }
+
+    @Override
+    public String toString() {
+        return this.tweetStr;
     }
 
 }

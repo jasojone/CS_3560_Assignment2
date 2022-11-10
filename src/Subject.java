@@ -1,5 +1,7 @@
 package src;
 
-public class Subject {
+public interface Subject {
+
+    public void Notify(Tweet newTweets);
 
 }

@@ -1,7 +1,5 @@
 package src;
 
-import java.awt.event.*;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.util.ArrayList;
@@ -11,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -22,14 +21,13 @@ import javax.swing.ScrollPaneConstants;
 import Observer.Observer;
 import Visitor.SysEntryVisitor;
 
-public class User extends JFrame implements ActionListener, SysEntry, Observer {
+public class User extends JFrame implements ActionListener, SysEntry, Observer, Subject {
 
     private UUID ID;
     private String userName;
 
     // overall tweets
     private List<Tweet> allTweets = new ArrayList<Tweet>();
-
     // this users tweet list
     private List<Tweet> myTweets = new ArrayList<Tweet>();
 
@@ -43,8 +41,10 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
     JTextArea tweetTextArea;
     JScrollPane curFollowingScroll;
 
-    JList curFollowingList;
-    JList newsFeedList;
+    JList<User> curFollowingList;
+    JList<Tweet> newsFeedList;
+    DefaultListModel<User> curFollowingListModel;
+    DefaultListModel<Tweet> newsFeedListModel;
 
     JScrollPane newsFeedScroll;
     JTextArea alertTextArea;
@@ -68,26 +68,29 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
 
         // general components
         Font font = new Font("Arial", Font.BOLD, 20);
+        Font listFont = new Font("Arial", Font.BOLD, 25);
 
         // textArea to write username of person to follow
         JLabel followUserLabel = new JLabel("User name");
         followUserLabel.setBounds(20, 4, 100, 20);
-        followUserTextArea = new JTextArea();
-        followUserTextArea.setBounds(20, 20, 240, 30);
-        followUserTextArea.setFont(font);
-        followUserTextArea.setBorder(BorderFactory.createLineBorder(Color.black));
+        this.followUserTextArea = new JTextArea();
+        this.followUserTextArea.setBounds(20, 20, 240, 30);
+        this.followUserTextArea.setFont(font);
+        this.followUserTextArea.setBorder(BorderFactory.createLineBorder(Color.black));
 
         // button to follow selected user
         JButton followUserButton = new JButton("Follow User");
         followUserButton.setBounds(275, 20, 240, 30);
+        followUserButton.addActionListener(this);
 
         // list view of current following
         JLabel curFollowingLabel = new JLabel("Current Following");
         curFollowingLabel.setBounds(20, 75, 240, 20);
-        this.curFollowingList = new JList<>();
+        this.curFollowingListModel = new DefaultListModel<>();
+        this.curFollowingList = new JList<>(curFollowingListModel);
+        this.curFollowingList.setFont(listFont);
         this.curFollowingList.setBounds(20, 95, 495, 200);
         this.curFollowingList.setBorder(BorderFactory.createLineBorder(Color.black));
-
         this.curFollowingScroll = new JScrollPane(curFollowingList);
         this.curFollowingScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.curFollowingScroll.setBounds(20, 95, 495, 200);
@@ -102,13 +105,16 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
         this.tweetTextArea.setLineWrap(true);
 
         // button to post tweet message
-        JButton tweetButton = new JButton("Post tweet");
+        JButton tweetButton = new JButton("Post Tweet");
         tweetButton.setBounds(275, 330, 240, 60);
+        tweetButton.addActionListener(this);
 
         // List View to show new feed other user posts
         JLabel newsFeedLabel = new JLabel("News Feed");
         newsFeedLabel.setBounds(20, 415, 100, 20);
-        this.newsFeedList = new JList<>();
+        this.newsFeedListModel = new DefaultListModel<>();
+        this.newsFeedList = new JList<>(newsFeedListModel);
+        this.newsFeedList.setFont(listFont);
         this.newsFeedList.setBounds(20, 440, 495, 200);
         this.newsFeedList.setBorder(BorderFactory.createLineBorder(Color.black));
         this.newsFeedScroll = new JScrollPane(newsFeedList);
@@ -139,10 +145,12 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
 
     }
 
-    @Override
-    public void update() {
-        // TODO Auto-generated method stub
+    public int getNumberOfTweets() {
+        return this.myTweets.size();
+    }
 
+    public List<Tweet> getTweets() {
+        return this.myTweets;
     }
 
     @Override
@@ -164,21 +172,36 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
     }
 
     @Override
-    public String getObservers() {
+    public int accept(SysEntryVisitor visitor) {
         // TODO Auto-generated method stub
-        return null;
+        return visitor.visit(this);
     }
 
     @Override
-    public void accept(SysEntryVisitor visitor) {
+    public void Notify(Tweet newTweet) {
         // TODO Auto-generated method stub
-        visitor.visit(this);
+
+        for (User observer : observers) {
+            observer.update(newTweet);
+
+        }
+
+    }
+
+    @Override
+    public void update(Tweet newTweet) {
+        // TODO Auto-generated method stub
+        this.allTweets.add(newTweet);
+        this.newsFeedListModel.addElement(newTweet);
+
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
 
         String action = e.getActionCommand();
+        System.out.println("Button press");
+        System.out.println(action);
 
         switch (action) {
             case "Follow User":
@@ -195,19 +218,39 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer {
     }
 
     private void followUserClicked() {
-        String userToFollow = this.followUserTextArea.getText();
-
+        // check if the user exists
+        String userToFollowName = this.followUserTextArea.getText();
         AdminPanel tempAdmin = AdminPanel.getInstance();
-        User user = tempAdmin.getUser(userToFollow);
-        if (user == null) {
+        User userToFollow = tempAdmin.getUser(userToFollowName);
+        if (userToFollow == null) {
             return;
         }
 
-        user.addObserver(this);
+        // check if already following
+        if (this.curFollowingListModel.contains(userToFollow)) {
+            return;
+        }
 
+        userToFollow.addObserver(this);
+        this.curFollowingListModel.addElement(userToFollow);
+
+        System.out.println(userToFollowName + " has been followed!");
     }
 
     private void postTweetClicked() {
+        Tweet newTweet = new Tweet(this.tweetTextArea.getText());
+        this.myTweets.add(newTweet);
+        this.allTweets.add(newTweet);
+
+        this.newsFeedListModel.addElement(newTweet);
+
+        // notify all observers
+        this.Notify(newTweet);
+
+    }
+
+    public String toString() {
+        return this.userName;
     }
 
 }
