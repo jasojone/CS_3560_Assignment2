@@ -238,7 +238,7 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
     }
 
     private void postTweetClicked() {
-        Tweet newTweet = new Tweet(this.tweetTextArea.getText());
+        Tweet newTweet = new Tweet(this.tweetTextArea.getText(), this.getName());
         this.myTweets.add(newTweet);
         this.allTweets.add(newTweet);
 

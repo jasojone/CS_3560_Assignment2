@@ -188,6 +188,10 @@ public class AdminPanel implements ActionListener {
             return;
         }
 
+        if (newUserName.length() == 0) {
+            return;
+        }
+
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
         User newUser = new User(newUserName);
@@ -241,6 +245,12 @@ public class AdminPanel implements ActionListener {
         if (this.groupMap.containsKey(newGroupName)) {
             return;
         }
+
+        if (newGroupName.length() == 0) {
+            return;
+        }
+
+        this.numberOfGroups += 1;
 
         DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
