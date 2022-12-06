@@ -22,6 +22,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 
+import Visitor.LastUpdatedVisitorImpl;
 import Visitor.PositiveCountVisitorImpl;
 import Visitor.SysEntryVisitor;
 import Visitor.TweetCountVisitorImpl;
@@ -42,6 +43,14 @@ public class AdminPanel implements ActionListener {
     private JTextArea alertTextArea;
     private HashMap<String, User> userMap;
     private HashMap<String, Group> groupMap;
+    // User/Group ID verification. One more button should be added to the main Admin UI to
+    // validate if all the IDs used in the users and groups are valid, based on the following two
+    // criteria: 1) all the IDs must be unique - there should not be duplicated IDs; 2) all the IDs
+    // should not contain spaces. You need to show a dialog (or print in console if GUI is not
+    // available) to tell whether all the IDs are valid or not. Note: you only need to output the
+    // validation result. You do NOT need to fix or prevent the invalid inputs.
+    
+    
 
     private AdminPanel() {
     }
@@ -158,6 +167,17 @@ public class AdminPanel implements ActionListener {
         showPositivePercButton.setBounds(595, 475, 180, 50);
         showPositivePercButton.addActionListener(this);
 
+        // button to validate IDs
+        JButton validateButton = new JButton("Validate IDs");
+        validateButton.setBounds(390, 335, 385, 50);
+        validateButton.addActionListener(this);
+
+        //button to find last update
+        JButton lastUpdateButton = new JButton("Find Last Update");
+        lastUpdateButton.setBounds(390, 265, 385, 50);
+        lastUpdateButton.addActionListener(this);
+
+
         frame.add(this.treeScroll);
         frame.add(treeLabel);
         frame.add(addUserLabel);
@@ -171,6 +191,8 @@ public class AdminPanel implements ActionListener {
         frame.add(showGroupTotalButton);
         frame.add(showMessagesTotalButton);
         frame.add(showPositivePercButton);
+        frame.add(validateButton);
+        frame.add(lastUpdateButton);
 
         frame.setTitle("Admin Panel");
         frame.setSize(800, 600);
@@ -403,6 +425,12 @@ public class AdminPanel implements ActionListener {
             case "Show Positive Percentage":
                 showPositivePercClicked();
                 break;
+            case "Validate IDs":
+                validateIds();
+                break;
+            case "Find Last Update":
+                lastUpdated();
+                break;
 
             default:
                 System.out.println("Something went wrong!");
@@ -411,6 +439,22 @@ public class AdminPanel implements ActionListener {
         }
 
     }
+    // last updated
+    // get the user name and time stamp of the last updated user
+    public void lastUpdated() {
+        SysEntryVisitor lastUpdatedVisitor = (SysEntryVisitor) new LastUpdatedVisitorImpl();
+        Object lastUpdatedUser = null;
+        for (User user : this.userMap.values()) {
+            lastUpdatedUser = user.accept(lastUpdatedVisitor);
+        }
+
+        if (lastUpdatedUser == null) {
+            return;
+        }
+
+        JOptionPane.showMessageDialog(frame, "Last updated user: " + ((User) lastUpdatedUser).getID() + " at " + ((User) lastUpdatedUser).getLastUpdated());
+
+    } 
 
     public void addTestValues() {
 
@@ -429,5 +473,25 @@ public class AdminPanel implements ActionListener {
         treeModel.reload(root);
 
     }
+    // validate IDs of all users in the system are unique and not null
 
+    public void validateIds() {
+        if (validateIdsWorker()) {
+            JOptionPane.showMessageDialog(frame, "All IDs are valid");
+        } else {
+            JOptionPane.showMessageDialog(frame, "There are invalid IDs");
+        }
+    }
+    public boolean validateIdsWorker(){
+        for (User user : this.userMap.values()) {
+            if(user.getID() == null){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // find the last updated user in the system and display their name and time
+    
+    
 }

@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.sql.Date;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -48,6 +49,7 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
 
     JScrollPane newsFeedScroll;
     JTextArea alertTextArea;
+    private Date creationTime;
 
     public User(String username) {
         this.userName = username;
@@ -252,5 +254,29 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
     public String toString() {
         return this.userName;
     }
+
+    public Object getLastUpdated() {
+        // get the last updated tweet
+        if (this.allTweets.size() > 0) {
+            return this.allTweets.get(this.allTweets.size() - 1);
+        }
+
+        return null;
+    }
+    // set the creation time of the user
+    public void setCreationTime(Date creationTime) {
+        this.creationTime = creationTime;
+    }
+
+    public Date getCreationTime() {
+        return this.creationTime;
+    }
+
+    @Override
+    public void setCreationTime(long creationTime) {
+        // TODO Auto-generated method stub
+        
+    }
+
 
 }

@@ -1,5 +1,6 @@
 package src;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -45,6 +46,18 @@ public class Group implements SysEntry {
 
         return 0;
 
+    }
+
+    @Override
+    public Date getCreationTime() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public void setCreationTime(long creationTime) {
+        // TODO Auto-generated method stub
+        
     }
 
 }
