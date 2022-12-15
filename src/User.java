@@ -49,11 +49,19 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
 
     JScrollPane newsFeedScroll;
     JTextArea alertTextArea;
-    private Date creationTime;
+    JLabel creationTimeLabel;
+    JLabel lastUpdateTimeLabel;
+
+
+
+    long creationTime;
+    long lastUpdateTime;
 
     public User(String username) {
         this.userName = username;
         this.ID = UUID.randomUUID();
+        this.creationTime = System.currentTimeMillis();
+        this.lastUpdateTime = -1;
     }
 
     public void followUser(User user) {
@@ -123,6 +131,12 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
         this.newsFeedScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
         this.newsFeedScroll.setBounds(20, 440, 495, 200);
 
+        // display creation time and last update time
+        this.creationTimeLabel = new JLabel("Creation Time: " + Long.toString(this.creationTime));
+        this.creationTimeLabel.setBounds(20, 650, 300, 20);
+        this.lastUpdateTimeLabel = new JLabel("Last Update Time: " + Long.toString(this.lastUpdateTime));
+        this.lastUpdateTimeLabel.setBounds(20, 670, 300, 20);
+
         add(followUserLabel);
         add(followUserTextArea);
         add(followUserButton);
@@ -133,8 +147,11 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
         add(tweetButton);
         add(newsFeedLabel);
         add(newsFeedScroll);
+        add(creationTimeLabel);
+        add(lastUpdateTimeLabel);
 
-        setSize(550, 700);
+
+        setSize(550, 750);
         setTitle(this.userName);
         setLayout(null);
         setResizable(false);
@@ -195,6 +212,9 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
         // TODO Auto-generated method stub
         this.allTweets.add(newTweet);
         this.newsFeedListModel.addElement(newTweet);
+        this.lastUpdateTime = System.currentTimeMillis();
+        this.lastUpdateTimeLabel.setText("Last Update Time: " + Long.toString(this.lastUpdateTime));
+
 
     }
 
@@ -245,6 +265,8 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
         this.allTweets.add(newTweet);
 
         this.newsFeedListModel.addElement(newTweet);
+        this.lastUpdateTime = System.currentTimeMillis();
+        this.lastUpdateTimeLabel.setText("Last Update Time: " + Long.toString(this.lastUpdateTime));
 
         // notify all observers
         this.Notify(newTweet);
@@ -262,20 +284,6 @@ public class User extends JFrame implements ActionListener, SysEntry, Observer, 
         }
 
         return null;
-    }
-    // set the creation time of the user
-    public void setCreationTime(Date creationTime) {
-        this.creationTime = creationTime;
-    }
-
-    public Date getCreationTime() {
-        return this.creationTime;
-    }
-
-    @Override
-    public void setCreationTime(long creationTime) {
-        // TODO Auto-generated method stub
-        
     }
 
 

@@ -441,20 +441,45 @@ public class AdminPanel implements ActionListener {
     }
     // last updated
     // get the user name and time stamp of the last updated user
-    public void lastUpdated() {
-        SysEntryVisitor lastUpdatedVisitor = (SysEntryVisitor) new LastUpdatedVisitorImpl();
-        Object lastUpdatedUser = null;
-        for (User user : this.userMap.values()) {
-            lastUpdatedUser = user.accept(lastUpdatedVisitor);
+    public void lastUpdated(){
+        String lastUpdatedUser = null;
+        long lastUpdatedTime = 0;
+
+        for(User user : userMap.values()){
+            if(user.lastUpdateTime > lastUpdatedTime){
+                lastUpdatedUser = user.getName();
+                lastUpdatedTime = user.lastUpdateTime;
+            }
         }
 
-        if (lastUpdatedUser == null) {
+        if(lastUpdatedUser == null){
+            JOptionPane.showMessageDialog(frame, "No user has been updated yet!");
             return;
         }
 
-        JOptionPane.showMessageDialog(frame, "Last updated user: " + ((User) lastUpdatedUser).getID() + " at " + ((User) lastUpdatedUser).getLastUpdated());
+        JOptionPane.showMessageDialog(frame, "Last updated user: " + lastUpdatedUser + " at " + Long.toString(lastUpdatedTime));
+    }
+    // public void lastUpdated() {
+            
+    //         String lastUpdatedUser = null;
+    //         long lastUpdatedTime = 0;
+    
+    //         for (User user : userMap.values()) {
+    //             if (user.lastUpdateTime > lastUpdatedTime) {
+    //                 lastUpdatedUser = user.getName();
 
-    } 
+    //                 lastUpdatedTime = (long) user.getLastUpdated();
+    //             }
+    //         }
+    
+    //         if (lastUpdatedUser == null) {
+    //             JOptionPane.showMessageDialog(frame, "No user has been updated yet!");
+    //             return;
+    //         }
+    
+    //         JOptionPane.showMessageDialog(frame, "Last updated user: " + lastUpdatedUser + " at " + lastUpdatedTime);
+    
+    // }
 
     public void addTestValues() {
 

@@ -11,12 +11,19 @@ public class Group implements SysEntry {
 
     private UUID ID;
     private String groupName;
+    
+
+
 
     private List<SysEntry> listOfSysEntry;
+    private java.sql.Date creationTimeDate;
+    long creationTime;
 
     public Group(String groupName) {
         this.groupName = groupName;
         this.listOfSysEntry = new ArrayList<SysEntry>();
+        this.creationTimeDate = new Date(System.currentTimeMillis());
+        this.creationTime = System.currentTimeMillis();
 
     }
 
@@ -46,18 +53,6 @@ public class Group implements SysEntry {
 
         return 0;
 
-    }
-
-    @Override
-    public Date getCreationTime() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setCreationTime(long creationTime) {
-        // TODO Auto-generated method stub
-        
     }
 
 }
